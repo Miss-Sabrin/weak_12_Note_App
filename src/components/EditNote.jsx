@@ -1,26 +1,56 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
+import { useSelector,useDispatch } from 'react-redux';
+import { editNote ,fetchNotes} from '../store/api/NoteSlice';
+import { useNavigate, useParams } from 'react-router-dom';
+import Notes from './Notes';
 
-const EditNote = (props) => {
-  const initialValues = {
-    title: props.initialValues.title,
-    content: props.initialValues.content,
-  };
+const EditNote = () => {
+  const dispatch=useDispatch()
+  const parms=useParams()
+  
+
+  const navigate=useNavigate()
+  const notes=useSelector((state)=>state.note.notes)
+
+  const [initialValues,setInitialValue]=useState({
+    title:'',
+    content:'',
+  })
+
+
+  useEffect(()=>{
+    dispatch(fetchNotes())
+  },[dispatch])
+
+  useEffect(()=>{
+    const note=notes.find((note)=>note.id === Number(parms.id));
+    if(note){
+      setInitialValue(note)
+    }
+      
+  },[notes,parms.id])
+
 
   const validationSchema = Yup.object({
     title: Yup.string().required('Title is required'),
     content: Yup.string().required('Content is required'),
   });
 
-  const handleSubmit = (values, { resetForm }) => {
-    // Send the data to the server (localhost:9000/update_note)
-    console.log('Sending data:', values);
-    props.editNote(values);
+  useEffect(()=>{
+    
+  })
+  const handleSubmit = (values)=> { 
+    dispatch(editNote({
+      noteId:Number(parms.id),
+      updatedNote:values
+    })).then(()=>{
+      navigate('/')
+    })
+   
 
-    // Reset the form after submission
-    resetForm();
-  };
+  }
 
   return (
     <div className="bg-white p-10 rounded-lg shadow md:w-3/4 mx-auto lg:w-1/2">
@@ -28,6 +58,7 @@ const EditNote = (props) => {
         initialValues={initialValues}
         validationSchema={validationSchema}
         onSubmit={handleSubmit}
+        enableReinitialize
       >
         <Form>
           <div className="mb-5">
